@@ -37,6 +37,9 @@ def doColumnBreak() :
     xpos += colw
     if (xpos + 1 > A4[0] - margin) :
         newPage(c)
+
+def warn(msg) :
+    print fileinput.filename() + ':' + str(fileinput.filelineno()), msg
     
 
 prevfile = None
@@ -97,8 +100,7 @@ for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
             pass
         
         else:
-            print fileinput.filename() + ':' + str(fileinput.filelineno()),
-            print "Unknown statement:", m.group(1), "param:", m.group(3)
+            warn("Unknown statement: " + m.group(1) + " param: " + str(m.group(3)))
     
     elif len(line) == 0 :
         ypos -= 16
@@ -110,10 +112,14 @@ for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
         ypos -= 24
             
         to = c.beginText(xpos, ypos)
-        ischord = 0;
+        ischord = 0
+        okpos = 0
         for x in chordre.split(line) :
             if ischord :
                 csp = to.getCursor()
+                while csp[0] < okpos :
+                    to.textOut(u'\u00B7')
+                    csp = to.getCursor()
                 to.setFont("Helvetica-Oblique", 10)
                 to.setRise(11)
                 to.setFillGray(0.5)
@@ -123,6 +129,7 @@ for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
                 to.setFillGray(0)
             to.textOut(x)
             if ischord :
+                okpos = to.getCursor()[0]
                 to.setTextOrigin(csp[0], csp[1])
             ischord = not(ischord);
         c.drawText(to)
