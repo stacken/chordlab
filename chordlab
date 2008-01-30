@@ -45,7 +45,7 @@ for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
         newPage(c)
         colw = A4[0]
         prevfile = fileinput.filename()
-        print prevfile
+        # print prevfile
     line = line.rstrip()
     m = statement.match(line)
     if m :
@@ -94,6 +94,7 @@ for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
             pass
         
         else:
+            print fileinput.filename() + ':' + str(fileinput.filelineno()),
             print "Unknown statement", m.group(1), "param:", m.group(3)
     
     elif len(line) == 0 :
