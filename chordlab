@@ -1,0 +1,127 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+c = canvas.Canvas("result.pdf")
+
+margin = 50
+ypos = A4[1] - 2*margin/3
+xpos = margin
+colstart = ypos
+
+def newPage(c) :
+    c.showPage()
+    c.line(margin, A4[1] - margin/2, A4[0] - margin, A4[1] - margin/2)
+    c.line(margin, margin/2, A4[0] - margin, margin/2)
+    global ypos
+    ypos = A4[1] - margin
+    global xpos
+    xpos = margin
+    
+import re
+statement = re.compile('{([a-z_]+)(: *(.*))?}')
+chordre = re.compile('\[([A-Za-z0-9#/\.%]+)\]')
+
+socpos = [0,0]
+
+
+import fileinput
+
+def doColumnBreak() :
+    global ypos
+    global xpos
+    global colstart
+    ypos = colstart
+    xpos += colw
+    if (xpos + 1 > A4[0] - margin) :
+        newPage(c)
+    
+
+prevfile = None
+for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
+    if prevfile != fileinput.filename():
+        newPage(c)
+        colw = A4[0]
+        prevfile = fileinput.filename()
+        print prevfile
+    line = line.rstrip()
+    m = statement.match(line)
+    if m :
+        stmt = m.group(1);
+        if stmt == 't' or stmt == 'title':
+            c.setFont("Times-Bold", 14);
+            ypos -= 6
+            c.drawCentredString(A4[0]/2, ypos, m.group(3))
+        elif stmt == 'st' or stmt == 'subtitle':
+            c.setFont("Times-Roman", 12);
+            ypos -= 14
+            c.drawCentredString(A4[0]/2, ypos, m.group(3))
+        elif stmt == 'c' or stmt == 'comment' or stmt == 'ci':
+            c.setFont("Times-Italic", 10)
+            ypos -= 12
+            c.drawString(xpos, ypos, m.group(3))
+        elif stmt == 'soc' or stmt == 'start_of_chorus':
+            socpos = [xpos-5, ypos]
+            xpos += 10
+            
+        elif stmt == 'eoc' or stmt == 'end_of_chorus':
+            xpos -= 10
+            c.line(socpos[0], socpos[1], xpos-5, ypos-5)
+
+        elif stmt == 'columns':
+            coln = int(m.group(3))
+            colw = (A4[0] - 2*margin) / coln
+            colstart = ypos
+            # print "Pagew:", A4[0] - 2*margin, "cols:", coln, "colw:", colw
+            
+        elif stmt == 'colb':
+            doColumnBreak()
+                
+        elif stmt == 'np' or stmt == 'new_page':
+            newPage(c)
+            
+        elif stmt == 'new_song':
+            newPage(c)
+            colw = A4[0]
+            
+        elif stmt == 'define':
+            # TODO define this chord!
+            pass
+        elif stmt == 'no_grid':
+            # TODO no chord grids for this song!
+            pass
+        
+        else:
+            print "Unknown statement", m.group(1), "param:", m.group(3)
+    
+    elif len(line) == 0 :
+        ypos -= 16
+    
+    elif line[0] != '#' :
+        
+        ypos -= 24
+        if ypos < margin :
+            doColumnBreak()
+            
+        to = c.beginText(xpos, ypos)
+        ischord = 0;
+        for x in chordre.split(line) :
+            if ischord :
+                csp = to.getCursor()
+                to.setFont("Helvetica-Oblique", 10)
+                to.setRise(11)
+                to.setFillGray(0.5)
+            else:
+                to.setFont("Times-Roman", 12)
+                to.setRise(0)
+                to.setFillGray(0)
+            to.textOut(x)
+            if ischord :
+                to.setTextOrigin(csp[0], csp[1])
+            ischord = not(ischord);
+        c.drawText(to)
+
+c.showPage()
+c.save()
