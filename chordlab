@@ -22,7 +22,7 @@ def newPage(c) :
     
 import re
 statement = re.compile('{([a-z_]+)(: *(.*))?}')
-chordre = re.compile('\[([A-Za-z0-9#/\.%]+)\]')
+chordre = re.compile('\[([^]]*)\]')
 
 socpos = [0,0]
 
