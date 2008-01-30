@@ -50,36 +50,39 @@ for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
     m = statement.match(line)
     if m :
         stmt = m.group(1);
-        if stmt == 't' or stmt == 'title':
+        if stmt in ('t', 'title'):
             c.setFont("Times-Bold", 14);
             ypos -= 6
             c.drawCentredString(A4[0]/2, ypos, m.group(3))
-        elif stmt == 'st' or stmt == 'subtitle':
+            
+        elif stmt in ('st', 'subtitle'):
             c.setFont("Times-Roman", 12);
             ypos -= 14
             c.drawCentredString(A4[0]/2, ypos, m.group(3))
-        elif stmt == 'c' or stmt == 'comment' or stmt == 'ci':
+            
+        elif stmt in ('c', 'comment', 'ci'):
             c.setFont("Times-Italic", 10)
             ypos -= 12
             c.drawString(xpos, ypos, m.group(3))
-        elif stmt == 'soc' or stmt == 'start_of_chorus':
+            
+        elif stmt in ('soc', 'start_of_chorus'):
             socpos = [xpos-5, ypos]
             xpos += 10
             
-        elif stmt == 'eoc' or stmt == 'end_of_chorus':
+        elif stmt in ('eoc', 'end_of_chorus'):
             xpos -= 10
             c.line(socpos[0], socpos[1], xpos-5, ypos-5)
 
-        elif stmt == 'columns':
+        elif stmt in ('col', 'cols', 'columns'):
             coln = int(m.group(3))
             colw = (A4[0] - 2*margin) / coln
             colstart = ypos
             # print "Pagew:", A4[0] - 2*margin, "cols:", coln, "colw:", colw
             
-        elif stmt == 'colb':
+        elif stmt in ('colb', 'column_break'):
             doColumnBreak()
                 
-        elif stmt == 'np' or stmt == 'new_page':
+        elif stmt in ('np', 'new_page'):
             newPage(c)
             
         elif stmt == 'new_song':
@@ -95,16 +98,16 @@ for line in fileinput.input(openhook=fileinput.hook_encoded("iso-8859-1")):
         
         else:
             print fileinput.filename() + ':' + str(fileinput.filelineno()),
-            print "Unknown statement", m.group(1), "param:", m.group(3)
+            print "Unknown statement:", m.group(1), "param:", m.group(3)
     
     elif len(line) == 0 :
         ypos -= 16
     
     elif line[0] != '#' :
         
-        ypos -= 24
-        if ypos < margin :
+        if ypos < margin + 20:
             doColumnBreak()
+        ypos -= 24
             
         to = c.beginText(xpos, ypos)
         ischord = 0;
