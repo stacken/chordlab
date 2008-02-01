@@ -7,21 +7,25 @@ from reportlab.lib.pagesizes import A4
 class CanvasAdapter(canvas.Canvas) :
     "My convenience adapter for the reportlab canvas."
     
-    def __init__(self, filename, pagesize=A4, margin=50):
+    def __init__(self, filename, pagesize=A4, margin=50, showfilenames = 0):
         canvas.Canvas.__init__(self, filename)
         self.pagesize = pagesize
         self.margin = margin
+        self.showfilenames = showfilenames
         self.pageno = 0
         self.left = self.margin
         self.right = self.pagesize[0] - self.margin
         self.top = self.pagesize[1] - self.margin/2
         self.bottom = self.margin/2
 
-    def newPage(self) :
+    def newPage(self, filename) :
         if self.pageno > 0: self.showPage()
         self.pageno += 1
         self.line(self.left, self.top, self.right, self.top)
         self.line(self.left, self.bottom, self.right, self.bottom)
+        if self.showfilenames:
+            self.setFont('Helvetica', 8)
+            self.drawString(self.left, self.bottom - 9, filename)
         return (self.left, self.top)
     
     def get_left(self) :
@@ -45,6 +49,9 @@ opt = OptionParser(usage="usage: %prog [options] file.chopro ...",
                    version="%prog 0.1 by Rasmus Kaj <kaj@stacken.kth.se>")
 opt.add_option("-o", "--output", dest="output", default="result.pdf",
                help="output file to write [default: %default]", metavar="FILE")
+opt.add_option("--showfilenames",
+               action="store_true", dest="showfiles", default=False,
+               help="Show source filenames in output")
 (options, sourcefiles) = opt.parse_args()
 
 usedchords = []
@@ -177,15 +184,15 @@ def newSong(c) :
     drawChordBoxes(c)
     global localchords
     localchords = {}
-    (x, y) = c.newPage()
-    global colw
     global prevfile
-    colw = c.get_right() # Any large number, really
     prevfile = fileinput.filename()
+    (x, y) = c.newPage(prevfile)
+    global colw
+    colw = c.get_right() # Any large number, really
     return (x, y)
 
 # -- main --
-c = CanvasAdapter(options.output)
+c = CanvasAdapter(options.output, showfilenames=options.showfiles)
 
 import re
 statement = re.compile('{([a-z_]+)(:? *(.*))?}')
@@ -205,7 +212,7 @@ def doColumnBreak() :
     ypos = colstart
     xpos += colw
     if (xpos + 1 > c.get_right()) :
-        (xpos, ypos) = c.newPage()
+        (xpos, ypos) = c.newPage(fileinput.filename())
     global tabmode
     if tabmode:
         c.setFont("Courier", 9);
@@ -266,7 +273,7 @@ for line in fileinput.input(sourcefiles,
             doColumnBreak()
                 
         elif stmt in ('np', 'new_page'):
-            (xpos, ypos) = c.newPage()
+            (xpos, ypos) = c.newPage(fileinput.filename())
             
         elif stmt == 'new_song':
             (xpos, ypos) = newSong(c)
