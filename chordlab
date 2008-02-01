@@ -1,31 +1,51 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+class CanvasAdapter(canvas.Canvas) :
+    "My convenience adapter for the reportlab canvas."
+    
+    def __init__(self, filename, pagesize=A4, margin=50):
+        canvas.Canvas.__init__(self, filename)
+        self.pagesize = pagesize
+        self.margin = margin
+        self.pageno = 0
+        self.left = self.margin
+        self.right = pagesize[0] - self.margin
+        self.top = pagesize[1] - self.margin/2
+        self.bottom = self.margin/2
+
+    def newPage(self) :
+        if self.pageno > 0: self.showPage()
+        self.pageno = self.pageno + 1
+        self.line(self.left, self.top, self.right, self.top)
+        self.line(self.left, self.bottom, self.right, self.bottom)
+        return (self.left, self.top)
+    
+    def get_left(self) :
+        "Get left start of drawable area"
+        return self.left
+
+    def get_right(self) :
+        "Get right end of drawable area"
+        return self.right
+
+    def get_top(self) :
+        "Get top start of drawable area"
+        return self.top
+
+    def get_bottom(self) :
+        "Get top end of drawable area"
+        return self.bottom
+
 from optparse import OptionParser
 opt = OptionParser(usage="usage: %prog [options] file.chopro ...",
                    version="%prog 0.1 by Rasmus Kaj <kaj@stacken.kth.se>")
 opt.add_option("-o", "--output", dest="output", default="result.pdf",
                help="output file to write [default: %default]", metavar="FILE")
 (options, sourcefiles) = opt.parse_args()
-
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-
-c = canvas.Canvas(options.output)
-
-margin = 50
-ypos = A4[1] - 2*margin/3
-xpos = margin
-colstart = ypos
-
-def newPage(c) :
-    c.showPage()
-    c.line(margin, A4[1] - margin/2, A4[0] - margin, A4[1] - margin/2)
-    c.line(margin, margin/2, A4[0] - margin, margin/2)
-    global ypos
-    ypos = A4[1] - margin
-    global xpos
-    xpos = margin
 
 usedchords = []
 
@@ -138,9 +158,10 @@ def drawChordBox(c, xpos, ypos, chord) :
 def drawChordBoxes(c) :
     global usedchords
     usedchords.sort()
-    xpos = margin;
+    xpos = c.get_left();
+    ypos = c.get_bottom() + 8
     for chord in usedchords:
-        drawChordBox(c, xpos, 4*margin/5, chord);
+        drawChordBox(c, xpos, ypos, chord);
         xpos += 40
     usedchords = []
     
@@ -155,12 +176,15 @@ def newSong(c) :
     drawChordBoxes(c)
     global localchords
     localchords = {}
-    newPage(c)
+    (x, y) = c.newPage()
     global colw
     global prevfile
-    colw = A4[0]
+    colw = c.get_right() # Any large number, really
     prevfile = fileinput.filename()
-    # print prevfile
+    return (x, y)
+
+# -- main --
+c = CanvasAdapter(options.output)
 
 import re
 statement = re.compile('{([a-z_]+)(: *(.*))?}')
@@ -171,14 +195,16 @@ socpos = [0,0]
 
 import fileinput
 
+colstart = 0
+
 def doColumnBreak() :
-    global ypos
     global xpos
+    global ypos
     global colstart
     ypos = colstart
     xpos += colw
-    if (xpos + 1 > A4[0] - margin) :
-        newPage(c)
+    if (xpos + 1 > c.get_right()) :
+        (xpos, ypos) = c.newPage()
 
 def warn(msg) :
     print fileinput.filename() + ':' + str(fileinput.filelineno()), msg
@@ -188,7 +214,7 @@ prevfile = None
 for line in fileinput.input(sourcefiles, 
                             openhook=fileinput.hook_encoded("iso-8859-1")):
     if prevfile != fileinput.filename():
-        newSong(c)
+        (xpos, ypos) = newSong(c)
         
     line = line.rstrip()
     m = statement.match(line)
@@ -196,13 +222,13 @@ for line in fileinput.input(sourcefiles,
         stmt = m.group(1);
         if stmt in ('t', 'title'):
             c.setFont("Times-Bold", 14);
-            ypos -= 6
-            c.drawCentredString(A4[0]/2, ypos, m.group(3))
+            ypos -= 18
+            c.drawCentredString((c.get_left() + c.get_right())/2, ypos, m.group(3))
             
         elif stmt in ('st', 'subtitle'):
             c.setFont("Times-Roman", 12);
             ypos -= 14
-            c.drawCentredString(A4[0]/2, ypos, m.group(3))
+            c.drawCentredString((c.get_left() + c.get_right())/2, ypos, m.group(3))
             
         elif stmt in ('c', 'comment', 'ci'):
             c.setFont("Times-Italic", 10)
@@ -219,7 +245,7 @@ for line in fileinput.input(sourcefiles,
 
         elif stmt in ('col', 'cols', 'columns'):
             coln = int(m.group(3))
-            colw = (A4[0] - 2*margin) / coln
+            colw = (c.get_right() - c.get_left()) / coln
             colstart = ypos
             # print "Pagew:", A4[0] - 2*margin, "cols:", coln, "colw:", colw
             
@@ -227,10 +253,10 @@ for line in fileinput.input(sourcefiles,
             doColumnBreak()
                 
         elif stmt in ('np', 'new_page'):
-            newPage(c)
+            (xpos, ypos) = c.newPage()
             
         elif stmt == 'new_song':
-            newSong(c)
+            (xpos, ypos) = newSong(c)
             
         elif stmt == 'define':
             defineChord(*m.group(3).split())
@@ -247,7 +273,7 @@ for line in fileinput.input(sourcefiles,
     
     elif line[0] != '#' :
         
-        if ypos < margin + 20:
+        if ypos < c.get_bottom() + 24:
             doColumnBreak()
         ypos -= 24
             
