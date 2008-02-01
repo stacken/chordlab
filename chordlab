@@ -13,13 +13,13 @@ class CanvasAdapter(canvas.Canvas) :
         self.margin = margin
         self.pageno = 0
         self.left = self.margin
-        self.right = pagesize[0] - self.margin
-        self.top = pagesize[1] - self.margin/2
+        self.right = self.pagesize[0] - self.margin
+        self.top = self.pagesize[1] - self.margin/2
         self.bottom = self.margin/2
 
     def newPage(self) :
         if self.pageno > 0: self.showPage()
-        self.pageno = self.pageno + 1
+        self.pageno += 1
         self.line(self.left, self.top, self.right, self.top)
         self.line(self.left, self.bottom, self.right, self.bottom)
         return (self.left, self.top)
@@ -209,6 +209,7 @@ def doColumnBreak() :
 def warn(msg) :
     print fileinput.filename() + ':' + str(fileinput.filelineno()), msg
     
+tabmode = 0
 
 prevfile = None
 for line in fileinput.input(sourcefiles, 
@@ -243,6 +244,13 @@ for line in fileinput.input(sourcefiles,
             xpos -= 10
             c.line(socpos[0], socpos[1], xpos-5, ypos-5)
 
+        elif stmt in ('sot'):
+            c.setFont("Courier", 10);
+            tabmode = 1
+            
+        elif stmt in ('eot'):
+            tabmode = 0
+            
         elif stmt in ('col', 'cols', 'columns'):
             coln = int(m.group(3))
             colw = (c.get_right() - c.get_left()) / coln
@@ -271,12 +279,20 @@ for line in fileinput.input(sourcefiles,
     elif len(line) == 0 :
         ypos -= 16
     
-    elif line[0] != '#' :
+    elif line[0] == '#':
+        pass
+    
+    elif tabmode:
+        if ypos < c.get_bottom() + 12:
+            doColumnBreak()
+        ypos -= 10
+        c.drawString(xpos, ypos, line)
         
+    else:
         if ypos < c.get_bottom() + 24:
             doColumnBreak()
         ypos -= 24
-            
+        
         to = c.beginText(xpos, ypos)
         ischord = 0
         okpos = 0
