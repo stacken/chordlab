@@ -156,18 +156,19 @@ def drawChordBox(c, xpos, ypos, chord) :
             x += dx
 
 def drawChordBoxes(c) :
+    boxw = 37
     global usedchords
     usedchords.sort()
-    xpos = c.get_left();
+    xpos = c.get_right() - len(usedchords) * boxw + boxw - 5*5;
     ypos = c.get_bottom() + 8
     for chord in usedchords:
         drawChordBox(c, xpos, ypos, chord);
-        xpos += 40
+        xpos += boxw
     usedchords = []
     
 def useChord(chord) :
     global usedchords
-    if not chord in ['N.C.', '%', ''] + usedchords :
+    if not chord in ['N.C.', '%', '-', ''] + usedchords :
         usedchords.append(chord)
         if not (knownchords.has_key(chord) or localchords.has_key(chord)) :
             warn("Unknown chord: " + chord)
@@ -187,7 +188,7 @@ def newSong(c) :
 c = CanvasAdapter(options.output)
 
 import re
-statement = re.compile('{([a-z_]+)(: *(.*))?}')
+statement = re.compile('{([a-z_]+)(:? *(.*))?}')
 chordre = re.compile('\[([^]]*)\]')
 
 socpos = [0,0]
@@ -205,6 +206,10 @@ def doColumnBreak() :
     xpos += colw
     if (xpos + 1 > c.get_right()) :
         (xpos, ypos) = c.newPage()
+    global tabmode
+    if tabmode:
+        c.setFont("Courier", 9);
+        
 
 def warn(msg) :
     print fileinput.filename() + ':' + str(fileinput.filelineno()), msg
@@ -245,7 +250,7 @@ for line in fileinput.input(sourcefiles,
             c.line(socpos[0], socpos[1], xpos-5, ypos-5)
 
         elif stmt in ('sot'):
-            c.setFont("Courier", 10);
+            c.setFont("Courier", 9);
             tabmode = 1
             
         elif stmt in ('eot'):
@@ -285,13 +290,13 @@ for line in fileinput.input(sourcefiles,
     elif tabmode:
         if ypos < c.get_bottom() + 12:
             doColumnBreak()
-        ypos -= 10
+        ypos -= 9
         c.drawString(xpos, ypos, line)
         
     else:
         if ypos < c.get_bottom() + 24:
             doColumnBreak()
-        ypos -= 24
+        ypos -= 22
         
         to = c.beginText(xpos, ypos)
         ischord = 0
@@ -303,7 +308,7 @@ for line in fileinput.input(sourcefiles,
                 while csp[0] < okpos :
                     to.textOut(u'\u00B7')
                     csp = to.getCursor()
-                to.setFont("Helvetica-Oblique", 10)
+                to.setFont("Helvetica-Oblique", 9)
                 to.setRise(11)
                 to.setFillGray(0.5)
             else:
@@ -312,7 +317,7 @@ for line in fileinput.input(sourcefiles,
                 to.setFillGray(0)
             to.textOut(x)
             if ischord :
-                okpos = to.getCursor()[0]
+                okpos = to.getCursor()[0] + 1
                 to.setTextOrigin(csp[0], csp[1])
             ischord = not(ischord);
         c.drawText(to)
