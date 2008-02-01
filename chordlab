@@ -179,6 +179,8 @@ def drawChordBoxes(c) :
     
 def useChord(chord) :
     global usedchords
+    p = re.compile('\(.*\)')
+    chord = p.sub('', chord)
     if not chord in ['N.C.', '%', '-', ''] + usedchords :
         usedchords.append(chord)
         if not (knownchords.has_key(chord) or localchords.has_key(chord)) :
@@ -285,7 +287,7 @@ for line in fileinput.input(sourcefiles,
         elif stmt == 'define':
             defineChord(*m.group(3).split())
             
-        elif stmt == 'no_grid':
+        elif stmt in ('ng', 'no_grid'):
             # TODO no chord grids for this song!
             pass
         
