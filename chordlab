@@ -178,7 +178,13 @@ def drawChordBox(c, xpos, ypos, chord) :
         
             x += dx
 
+skip_grid = False
+
 def drawChordBoxes(c) :
+    global skip_grid
+    if skip_grid:
+        skip_grid = False
+        return
     boxw = 37
     global usedchords
     usedchords.sort()
@@ -300,8 +306,7 @@ for line in fileinput.input(sourcefiles,
             defineChord(*m.group(3).split())
             
         elif stmt in ('ng', 'no_grid'):
-            # TODO no chord grids for this song!
-            pass
+            skip_grid = True
         
         else:
             warn("Unknown statement: " + m.group(1) + " param: " + str(m.group(3)))
