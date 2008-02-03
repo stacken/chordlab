@@ -66,7 +66,7 @@ brackets and some other options in braces, on separate lines."""
 opt = OptionParser(usage="usage: %prog [options] file.chopro ...",
                    version="%prog 0.1 by Rasmus Kaj <kaj@stacken.kth.se>",
                    description=description)
-opt.add_option("-o", "--output", dest="output", default="result.pdf",
+opt.add_option("-o", "--output", dest="output", default="chords.pdf",
                help="output file to write [default: %default]", metavar="FILE")
 opt.add_option("--showfilenames",
                action="store_true", dest="showfiles", default=False,
