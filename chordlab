@@ -15,8 +15,8 @@ class CanvasAdapter(canvas.Canvas) :
         self.showfilenames = showfilenames
         self.duplex = duplex
         self.pageno = 0
-        self.top = self.pagesize[1] - self.margin/3
-        self.bottom = self.margin/2
+        self.top = self.pagesize[1] - 0.4*self.margin
+        self.bottom = 0.62*self.margin
         self.left = 0.5 * self.margin
         self.right = self.pagesize[0] - 1.5 * self.margin
 
