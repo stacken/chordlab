@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+author = "Rasmus Kaj <kaj@stacken.kth.se>"
+license = author + """ wrote this program.
+As long as you retain this notice you can do whatever you want with this
+stuff.  If we meet some day, and you think this stuff is worth it, you
+can buy me a beer in return."""
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
@@ -64,7 +69,8 @@ is read from stdin.  Chopro files is simply text files with chord names in
 brackets and some other options in braces, on separate lines."""
 
 opt = OptionParser(usage="usage: %prog [options] file.chopro ...",
-                   version="%prog 0.1 by Rasmus Kaj <kaj@stacken.kth.se>",
+                   version="%prog 0.1 by " + author,
+                   epilog=license,
                    description=description)
 opt.add_option("-o", "--output", dest="output", default="chords.pdf",
                help="output file to write [default: %default]", metavar="FILE")
