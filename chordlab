@@ -109,7 +109,7 @@ is read from stdin.  Chopro files is simply text files with chord names in
 brackets and some other options in braces, on separate lines."""
 
 opt = OptionParser(usage="usage: %prog [options] file.chopro ...",
-                   version="%prog 0.1 by " + author,
+                   version="%prog 0.1+ by " + author,
                    description=description,
                    epilog=license,
                    option_class=MyOption)
