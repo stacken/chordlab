@@ -5,6 +5,8 @@ license = author + """ wrote this program.
 As long as you retain this notice you can do whatever you want with this
 stuff.  If we meet some day, and you think this stuff is worth it, you
 can buy me a beer in return."""
+version = '0.1+'
+progurl = 'http://rasmus.krats.se/2008/chordlab/'
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
@@ -13,8 +15,29 @@ class CanvasAdapter(canvas.Canvas) :
     "My convenience adapter for the reportlab canvas."
     
     def __init__(self, filename, pagesize=A4, margin=50, showfilenames=False,
-                 duplex=True):
+                 duplex=True, title=None, author=None):
         canvas.Canvas.__init__(self, filename, pagesize=pagesize)
+        
+        if not title:
+            title = 'Songbook'
+        self.setTitle(title)
+        
+        if not author:
+            try:
+                import pwd, socket
+                logname = 'rasmus';
+                hostname = socket.gethostname()
+                data = pwd.getpwnam('rasmus');
+                author = (data.pw_gecos.split(',')[0] +
+                          ' <'+logname+'@'+hostname+'>');
+            except:
+                print "WARNING: Could not determine author name"
+        # reportlab doesn't provide a nicer interface to this (yet)
+        self._doc.setAuthor(author)
+        
+        # reportlab doesn't provide a nicer interface to this (yet)
+        self._doc.info.producer = 'Chordlab ' + version + '\n' + progurl
+        
         self.pagesize = pagesize
         self.margin = margin
         self.showfilenames = showfilenames
@@ -109,18 +132,23 @@ is read from stdin.  Chopro files is simply text files with chord names in
 brackets and some other options in braces, on separate lines."""
 
 opt = OptionParser(usage="usage: %prog [options] file.chopro ...",
-                   version="%prog 0.1+ by " + author,
+                   version="%prog " + version + " by " + author,
                    description=description,
-                   epilog=license,
+                   epilog=license + '\n\n' + progurl,
                    option_class=MyOption)
 opt.add_option("-o", "--output", dest="output", default="chords.pdf",
                help="output file to write [default: %default]", metavar="FILE")
 opt.add_option("-p", "--pagesize", dest="pagesize", type="pagesize",
                default="A4", metavar="SZ",
                help="output page size, name or dimensions [default: %default]")
+opt.add_option("--title", dest="doctitle", metavar="TITLE",
+               help="document title to put in PDF metadata")
+opt.add_option("--author", dest="docauthor", metavar="AUTHOR",
+               help="author name/address to put in PDF metadata")
 opt.add_option("--showfilenames",
                action="store_true", dest="showfiles", default=False,
                help="Show source filenames in output")
+               
 (options, sourcefiles) = opt.parse_args()
 
 usedchords = []
@@ -317,7 +345,8 @@ def newSong(c) :
 
 # -- main --
 c = CanvasAdapter(options.output, showfilenames=options.showfiles,
-                  pagesize=options.pagesize)
+                  pagesize=options.pagesize,
+                  title=options.doctitle, author=options.docauthor)
 
 import re
 statement = re.compile('{([a-z_]+)(:? *(.*))?}')
