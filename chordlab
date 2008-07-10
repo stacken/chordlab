@@ -332,14 +332,18 @@ def drawChordBoxes(c) :
     if skip_grid:
         skip_grid = False
         return
-    boxw = 37
+    boxw = 38
     global usedchords
     usedchords.sort()
-    xpos = c.get_right() - len(usedchords) * boxw + boxw - 5*5;
+    usedchords.reverse()
+    xpos = c.get_right() - boxw + 10
     ypos = c.get_bottom() + 8
     for chord in usedchords:
         drawChordBox(c, xpos, ypos, chord);
-        xpos += boxw
+        xpos -= boxw
+        if xpos < c.get_left():
+            xpos = c.get_right() - boxw + 10
+            ypos += 50
     usedchords = []
     
 def useChord(chord) :
