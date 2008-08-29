@@ -24,12 +24,16 @@ class CanvasAdapter(canvas.Canvas) :
         
         if not author:
             try:
-                import pwd, socket
-                logname = 'rasmus';
-                hostname = socket.gethostname()
-                data = pwd.getpwnam('rasmus');
-                author = (data.pw_gecos.split(',')[0] +
-                          ' <'+logname+'@'+hostname+'>');
+                import pwd, socket, os
+                logname = os.environ.get('LOGNAME')
+                if not logname: logname = os.environ.get('USER')
+                if not logname: logname = os.environ.get('LNAME')
+                if not logname: logname = os.environ.get('USERNAME')
+                realname = pwd.getpwnam(logname).pw_gecos.split(',')[0];
+                mailaddr = os.environ.get('MAILADDR')
+                if not mailaddr:
+                    mailaddr = logname + '@' + socket.gethostname()
+                author = '%s <%s>' %(realname, mailaddr)
             except:
                 print "WARNING: Could not determine author name"
         # reportlab doesn't provide a nicer interface to this (yet)
