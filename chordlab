@@ -18,26 +18,10 @@ class CanvasAdapter(canvas.Canvas) :
                  duplex=True, title=None, author=None):
         canvas.Canvas.__init__(self, filename, pagesize=pagesize)
         
-        if not title:
-            title = 'Songbook'
-        self.setTitle(title)
+        self.setTitle(title or 'Songbook')
         
-        if not author:
-            try:
-                import pwd, socket, os
-                logname = os.environ.get('LOGNAME')
-                if not logname: logname = os.environ.get('USER')
-                if not logname: logname = os.environ.get('LNAME')
-                if not logname: logname = os.environ.get('USERNAME')
-                realname = pwd.getpwnam(logname).pw_gecos.split(',')[0];
-                mailaddr = os.environ.get('MAILADDR')
-                if not mailaddr:
-                    mailaddr = logname + '@' + socket.gethostname()
-                author = '%s <%s>' %(realname, mailaddr)
-            except:
-                print "WARNING: Could not determine author name"
         # reportlab doesn't provide a nicer interface to this (yet)
-        self._doc.setAuthor(author)
+        self._doc.setAuthor(author or self._guess_author())
         
         # reportlab doesn't provide a nicer interface to this (yet)
         self._doc.info.producer = 'Chordlab ' + version + '\n' + progurl
@@ -52,6 +36,20 @@ class CanvasAdapter(canvas.Canvas) :
         self.left = 0.5 * self.margin
         self.right = self.pagesize[0] - 1.5 * self.margin
 
+    def _guess_author(self):
+        try:
+            import pwd, socket, os
+            pw = pwd.getpwnam(os.getuid())
+            realname = pw.pw_gecos.split(',')[0];
+            mailaddr = os.environ.get('MAILADDR')
+            if not mailaddr:
+                logname = os.environ.get('LOGNAME') or pw.pw_name
+                mailaddr = logname + '@' + socket.gethostname()
+            return u'%s <%s>' % (realname, mailaddr)
+        except:
+            print "WARNING: Could not determine author name"
+            return None
+        
     def newPage(self, filename) :
         if self.pageno > 0: self.showPage()
         self.pageno += 1
