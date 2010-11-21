@@ -39,7 +39,7 @@ class CanvasAdapter(canvas.Canvas) :
     def _guess_author(self):
         try:
             import pwd, socket, os
-            pw = pwd.getpwnam(os.getuid())
+            pw = pwd.getpwuid(os.getuid())
             realname = pw.pw_gecos.split(',')[0];
             mailaddr = os.environ.get('MAILADDR')
             if not mailaddr:
