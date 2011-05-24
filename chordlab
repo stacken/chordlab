@@ -379,7 +379,7 @@ c = CanvasAdapter(options.output, showfilenames=options.showfiles,
                   title=options.doctitle, author=options.docauthor)
 
 import re
-statement = re.compile('{([a-z_]+)(:? *(.*))?}')
+statement = re.compile('\s*{([a-z_]+)(:? *(.*))?}\s*')
 chordre = re.compile('\[([^]]*)\]')
 
 socpos = [0,0]
