@@ -407,9 +407,22 @@ def warn(msg) :
     
 tabmode = 0
 
+def detect_encoding(default='utf-8'):
+    """A hook for fileinput to detect encoding tags at start of each file."""
+    def open_hook(filename, mode):
+        import codecs, re
+        f = open(filename, mode)
+        # Check the two first lines for an encoding mark!
+        coding = re.search(r'-\*- +(en)?coding: (?P<c>[a-z0-9_-]+) +-\*-', 
+                           f.readline() + f.readline())
+        f.close()
+        return codecs.open(filename, mode,
+                           coding.group('c') if coding else default)
+    return open_hook
+
 prevfile = None
 for line in fileinput.input(sourcefiles, 
-                            openhook=fileinput.hook_encoded("iso-8859-1")):
+                            openhook=detect_encoding(default='iso-8859-1')):
     if prevfile != fileinput.filename():
         (xpos, ypos) = newSong(c)
         
