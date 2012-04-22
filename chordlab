@@ -67,7 +67,11 @@ class CanvasAdapter(canvas.Canvas) :
         self.line(self.left, self.bottom, self.right, self.bottom)
         if self.showfilenames:
             self.setFont('Helvetica', 8)
-            self.drawString(self.left, self.bottom - 9, filename)
+            if self.duplex and (self.pageno % 2 == 1):
+                self.drawString(self.left, self.bottom - 9, filename)
+            else:
+                self.drawRightString(self.right, self.bottom - 9, filename)
+                
         return (self.left, self.top)
     
     def get_left(self) :
