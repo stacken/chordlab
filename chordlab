@@ -524,7 +524,7 @@ for line in fileinput.input(sourcefiles,
                 to.setFillGray(0)
             to.textOut(x)
             if ischord :
-                okpos = to.getCursor()[0] + 1
+                okpos = to.getCursor()[0] + 3
                 to.setTextOrigin(csp[0], csp[1])
             ischord = not(ischord);
         c.drawText(to)
