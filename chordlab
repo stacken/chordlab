@@ -383,7 +383,7 @@ c = CanvasAdapter(options.output, showfilenames=options.showfiles,
                   title=options.doctitle, author=options.docauthor)
 
 import re
-statement = re.compile('\s*{([a-z_]+)(:? *(.*))?}\s*')
+statement = re.compile('\s*{([a-z_]+)(:? *(.*))?}\s*', re.I)
 chordre = re.compile('\[([^]]*)\]')
 
 socpos = [0,0]
@@ -433,7 +433,7 @@ for line in fileinput.input(sourcefiles,
     line = line.rstrip()
     m = statement.match(line)
     if m :
-        stmt = m.group(1);
+        stmt = m.group(1).lower();
         if stmt in ('t', 'title'):
             c.setFont("Times-Bold", 14);
             ypos -= 18
