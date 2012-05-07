@@ -154,7 +154,10 @@ opt.add_option("--author", dest="docauthor", metavar="AUTHOR",
 opt.add_option("--showfilenames",
                action="store_true", dest="showfiles", default=False,
                help="Show source filenames in output")
-               
+opt.add_option("--no-compact",
+               action="store_true", dest="disable_compact", default=False,
+               help="Make place for chords even on lines w/o chords")
+
 (options, sourcefiles) = opt.parse_args()
 
 usedchords = []
@@ -503,12 +506,16 @@ for line in fileinput.input(sourcefiles,
     else:
         if ypos < c.get_bottom() + 24:
             doColumnBreak()
-        ypos -= 22
+        parts = chordre.split(line)
+        if options.disable_compact or len(parts) > 1:
+            ypos -= 22
+        else:
+            ypos -= 12
         
         to = c.beginText(xpos, ypos)
         ischord = 0
         okpos = 0
-        for x in chordre.split(line) :
+        for x in parts:
             if ischord :
                 useChord(x)
                 csp = to.getCursor()
