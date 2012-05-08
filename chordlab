@@ -160,7 +160,7 @@ opt.add_option("--no-compact",
 
 (options, sourcefiles) = opt.parse_args()
 
-usedchords = []
+usedchords = set()
 
 knownchords = {
     'Ab':    [4,  1, 3, 3, 2, 1, 1],
@@ -348,24 +348,22 @@ def drawChordBoxes(c) :
         return
     boxw = 38
     global usedchords
-    usedchords.sort()
-    usedchords.reverse()
     xpos = c.get_right() - boxw + 10
     ypos = c.get_bottom() + 8
-    for chord in usedchords:
+    for chord in reversed(sorted(usedchords)):
         drawChordBox(c, xpos, ypos, chord);
         xpos -= boxw
         if xpos < c.get_left():
             xpos = c.get_right() - boxw + 10
             ypos += 55
-    usedchords = []
+    usedchords = set()
     
 def useChord(chord) :
     global usedchords
     p = re.compile('\(.*\)')
     chord = p.sub('', chord)
-    if not chord in ['N.C.', '%', '-', ''] + usedchords :
-        usedchords.append(chord)
+    if not (chord in ['N.C.', '%', '-', ''] or chord in usedchords):
+        usedchords.add(chord)
         if not (knownchords.has_key(chord) or localchords.has_key(chord)) :
             warn("Unknown chord: " + chord)
 
