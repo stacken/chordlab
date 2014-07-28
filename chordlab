@@ -157,6 +157,9 @@ opt.add_option("--showfilenames",
 opt.add_option("--no-compact",
                action="store_true", dest="disable_compact", default=False,
                help="Make place for chords even on lines w/o chords")
+opt.add_option("--no-grid",
+               action="store_true", dest="disable_grid", default=False,
+               help="Don't draw the chord grids")
 
 (options, sourcefiles) = opt.parse_args()
 
@@ -339,12 +342,12 @@ def drawChordBox(c, xpos, ypos, chord) :
         
             x += dx
 
-skip_grid = False
+skip_grid = options.disable_grid
 
 def drawChordBoxes(c) :
     global skip_grid
     if skip_grid:
-        skip_grid = False
+        skip_grid = options.disable_grid
         return
     boxw = 38
     global usedchords
