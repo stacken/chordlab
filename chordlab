@@ -514,14 +514,15 @@ for line in fileinput.input(sourcefiles,
             ypos -= 12
         
         to = c.beginText(xpos, ypos)
-        ischord = 0
+        ischord = False
+        inword = False
         okpos = 0
         for x in parts:
             if ischord :
                 useChord(x)
                 csp = to.getCursor()
                 while csp[0] < okpos :
-                    to.textOut(u'\u00B7')
+                    to.textOut(' ' if inword else u'\u00B7')
                     csp = to.getCursor()
                 to.setFont("Helvetica-Oblique", 9)
                 to.setRise(11)
@@ -534,6 +535,8 @@ for line in fileinput.input(sourcefiles,
             if ischord :
                 okpos = to.getCursor()[0] + 3
                 to.setTextOrigin(csp[0], csp[1])
+            else:
+                inword = x and x[-1] == ' '
             ischord = not(ischord);
         c.drawText(to)
 
