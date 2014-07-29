@@ -387,7 +387,7 @@ c = CanvasAdapter(options.output, showfilenames=options.showfiles,
                   title=options.doctitle, author=options.docauthor)
 
 import re
-statement = re.compile('\s*{([a-z_]+)(:? *(.*))?}\s*', re.I)
+statement = re.compile(r'\s*{([a-z_]+)(?::?\s*(.*))?}\s*', re.I)
 chordre = re.compile('\[([^]]*)\]')
 
 socpos = [0,0]
@@ -441,17 +441,19 @@ for line in fileinput.input(sourcefiles,
         if stmt in ('t', 'title'):
             c.setFont("Times-Bold", 14);
             ypos -= 18
-            c.drawCentredString((c.get_left() + c.get_right())/2, ypos, m.group(3))
+            c.drawCentredString((c.get_left() + c.get_right())/2, ypos,
+                                m.group(2))
             
         elif stmt in ('st', 'subtitle'):
             c.setFont("Times-Roman", 12);
             ypos -= 14
-            c.drawCentredString((c.get_left() + c.get_right())/2, ypos, m.group(3))
+            c.drawCentredString((c.get_left() + c.get_right())/2, ypos,
+                                m.group(2))
             
         elif stmt in ('c', 'comment', 'ci'):
             c.setFont("Times-Italic", 10)
             ypos -= 12
-            c.drawString(xpos, ypos, m.group(3))
+            c.drawString(xpos, ypos, m.group(2))
             
         elif stmt in ('soc', 'start_of_chorus'):
             socpos = [xpos-5, ypos]
@@ -469,7 +471,7 @@ for line in fileinput.input(sourcefiles,
             tabmode = 0
             
         elif stmt in ('col', 'cols', 'columns'):
-            coln = int(m.group(3))
+            coln = int(m.group(2))
             colw = (c.get_right() - c.get_left()) / coln
             colstart = ypos
             # print "Pagew:", A4[0] - 2*margin, "cols:", coln, "colw:", colw
@@ -484,13 +486,13 @@ for line in fileinput.input(sourcefiles,
             (xpos, ypos) = newSong(c)
             
         elif stmt == 'define':
-            defineChord(*m.group(3).split())
+            defineChord(*m.group(2).split())
             
         elif stmt in ('ng', 'no_grid'):
             skip_grid = True
         
         else:
-            warn("Unknown statement: " + m.group(1) + " param: " + str(m.group(3)))
+            warn("Unknown statement: %s param: '%s'" % (stmt, m.group(2)))
     
     elif len(line) == 0 :
         ypos -= 16
